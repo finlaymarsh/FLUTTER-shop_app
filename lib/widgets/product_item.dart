@@ -1,78 +1,82 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-import '../models/product.dart';
+import '../screens/product_detail_screen.dart';
+import '../providers/product.dart';
+import '../providers/cart.dart';
 
 class ProductItem extends StatelessWidget {
-  final Product product;
-
-  ProductItem(this.product);
-
   @override
   Widget build(BuildContext context) {
+    final product = Provider.of<Product>(context, listen: false);
+    final cart = Provider.of<Cart>(context, listen: false);
     return Card(
       shape: RoundedRectangleBorder(
           side: new BorderSide(
-            color: Theme.of(context).primaryColor,
+            color: Theme.of(context).accentColor,
             width: 1,
           ),
-          borderRadius: BorderRadius.circular(10)),
+          borderRadius: BorderRadius.circular(15)),
       margin: EdgeInsets.all(0),
       elevation: 6,
       child: Column(
         children: <Widget>[
           Expanded(
-            child: ClipRRect(
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(15), topRight: Radius.circular(15)),
-              child: Image.network(
-                product.imageUrl,
-                fit: BoxFit.cover,
+            child: Container(
+              width: double.infinity,
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pushNamed(ProductDetailScreen.routeName,
+                      arguments: product);
+                },
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      topRight: Radius.circular(15)),
+                  child: Image.network(
+                    product.imageUrl,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
             ),
           ),
-          Column(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    alignment: Alignment.bottomCenter,
-                    padding: const EdgeInsets.only(left: 20),
-                    child: Text(
-                      product.title,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(fontSize: 16),
-                    ),
+              Consumer<Product>(
+                builder: (_, value, __) => IconButton(
+                  alignment: Alignment.centerLeft,
+                  splashRadius: 19,
+                  icon: Icon(
+                    value.isFavourite ? Icons.favorite : Icons.favorite_border,
+                    color: Theme.of(context).accentColor,
                   ),
-                ],
+                  onPressed: () {
+                    value.toggleFavouriteStatus();
+                  },
+                ),
               ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: IconButton(
-                      alignment: Alignment.centerLeft,
-                      splashRadius: 19,
-                      icon: Icon(Icons.favorite),
-                      onPressed: () {},
-                    ),
+              Expanded(
+                child: Text(
+                  product.title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  Expanded(
-                    child: Text(
-                      product.title,
-                      style: TextStyle(
-                          fontSize: 16, overflow: TextOverflow.ellipsis),
-                    ),
-                  ),
-                  Flexible(
-                    child: IconButton(
-                      alignment: Alignment.centerRight,
-                      splashRadius: 19,
-                      icon: Icon(Icons.shopping_cart),
-                      onPressed: () {},
-                    ),
-                  ),
-                ],
+                ),
+              ),
+              IconButton(
+                alignment: Alignment.centerRight,
+                splashRadius: 19,
+                icon: Icon(
+                  Icons.shopping_cart,
+                ),
+                onPressed: () {
+                  cart.addItem(product);
+                },
               ),
             ],
           ),
