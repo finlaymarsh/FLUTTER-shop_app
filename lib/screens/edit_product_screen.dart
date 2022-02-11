@@ -26,6 +26,7 @@ class _EditProductScreenState extends State<EditProductScreen> {
   var _imageUrl = "";
   var _isInit = true;
   var _loadedProduct = null;
+  var _isLoading = false;
 
   @override
   void initState() {
@@ -66,21 +67,44 @@ class _EditProductScreenState extends State<EditProductScreen> {
     }
   }
 
-  void _saveForm() {
+  void _saveForm() async {
     if (_form.currentState.validate()) {
       _form.currentState.save();
+      setState(() {
+        _isLoading = true;
+      });
       if (_loadedProduct == null) {
-        Provider.of<Products>(context, listen: false).addProduct(
-          Product(
-            id: DateTime.now().toString(),
-            title: _title,
-            price: _price,
-            description: _description,
-            imageUrl: _imageUrl,
-          ),
-        );
+        try {
+          await Provider.of<Products>(context, listen: false).addProduct(
+            Product(
+              id: DateTime.now().toString(),
+              title: _title,
+              price: _price,
+              description: _description,
+              imageUrl: _imageUrl,
+            ),
+          );
+        } catch (error) {
+          await showDialog<Null>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text('An error occurred!'),
+              content: Text(
+                'Something went wrong.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('Okay'),
+                ),
+              ],
+            ),
+          );
+        }
       } else {
-        Provider.of<Products>(context, listen: false).updateProduct(
+        await Provider.of<Products>(context, listen: false).updateProduct(
           Product(
             id: _loadedProduct.id,
             title: _title,
@@ -91,7 +115,9 @@ class _EditProductScreenState extends State<EditProductScreen> {
           ),
         );
       }
-
+      setState(() {
+        _isLoading = false;
+      });
       Navigator.of(context).pop();
     } else {
       return;
@@ -116,68 +142,72 @@ class _EditProductScreenState extends State<EditProductScreen> {
         ),
         onPressed: _saveForm,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _form,
-          child: SingleChildScrollView(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Theme.of(context).primaryColorLight,
-                borderRadius: BorderRadius.circular(5),
-              ),
-              padding: EdgeInsets.symmetric(vertical: 25, horizontal: 10),
-              child: Column(
-                children: [
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: SingleLineTextField(
-                        initialText: _title,
-                        label: "Title",
-                        nextFocusNode: _priceFocusNode,
-                        onSaved: (value) => _title = value,
-                      ),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _form,
+                child: SingleChildScrollView(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColorLight,
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    padding: EdgeInsets.symmetric(vertical: 25, horizontal: 10),
+                    child: Column(
+                      children: [
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: SingleLineTextField(
+                              initialText: _title,
+                              label: "Title",
+                              nextFocusNode: _priceFocusNode,
+                              onSaved: (value) => _title = value,
+                            ),
+                          ),
+                        ),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: PriceField(
+                              initialValue: _price.toStringAsFixed(2),
+                              focusNode: _priceFocusNode,
+                              nextFocusNode: _descriptionFocusNode,
+                              onSaved: (value) => _price = double.parse(value),
+                            ),
+                          ),
+                        ),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: MultiLineTextField(
+                              initialValue: _description,
+                              label: 'Description',
+                              onSaved: (value) => _description = value,
+                            ),
+                          ),
+                        ),
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: ImageUrlField(
+                              imageUrlController: _imageUrlController,
+                              focusNode: _imageUrlFocusNode,
+                              saveForm: _saveForm,
+                              onSaved: (value) => _imageUrl = value,
+                            ),
+                          ),
+                        )
+                      ],
                     ),
                   ),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: PriceField(
-                        initialValue: _price.toStringAsFixed(2),
-                        focusNode: _priceFocusNode,
-                        nextFocusNode: _descriptionFocusNode,
-                        onSaved: (value) => _price = double.parse(value),
-                      ),
-                    ),
-                  ),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: MultiLineTextField(
-                        initialValue: _description,
-                        label: 'Description',
-                        onSaved: (value) => _description = value,
-                      ),
-                    ),
-                  ),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ImageUrlField(
-                        imageUrlController: _imageUrlController,
-                        focusNode: _imageUrlFocusNode,
-                        saveForm: _saveForm,
-                        onSaved: (value) => _imageUrl = value,
-                      ),
-                    ),
-                  )
-                ],
+                ),
               ),
             ),
-          ),
-        ),
-      ),
     );
   }
 }

@@ -35,7 +35,7 @@ class _OrderItemState extends State<OrderItem> {
           ListTile(
             title: Text('£${widget.itemInOrder.amount.toStringAsFixed(2)}'),
             subtitle: Text(
-              DateFormat('dd MM yyyy hh:mm')
+              DateFormat('dd/MM/yyyy HH:mm')
                   .format(widget.itemInOrder.dateTime),
             ),
             trailing: IconButton(
