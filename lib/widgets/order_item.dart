@@ -71,7 +71,7 @@ class _OrderItemState extends State<OrderItem> {
                           ),
                         ),
                         Text(
-                          '${widget.itemInOrder.itemsInCart[index].quantity}x £${widget.itemInOrder.itemsInCart[index].product.price}',
+                          '${widget.itemInOrder.itemsInCart[index].quantity}x £${widget.itemInOrder.itemsInCart[index].product.price.toStringAsFixed(2)}',
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.grey,

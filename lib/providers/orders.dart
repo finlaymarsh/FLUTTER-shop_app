@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 
 import 'item_in_order.dart';
 import '../models/item_in_cart.dart';
+import '../providers/product.dart';
 
 class Orders with ChangeNotifier {
   static const baseUrl =
@@ -35,7 +36,9 @@ class Orders with ChangeNotifier {
                   (cp) => {
                     'id': cp.id,
                     'quantity': cp.quantity,
-                    'product': cp.product.id,
+                    'product': cp.id,
+                    'title': cp.product.title,
+                    'price': cp.product.price,
                   },
                 )
                 .toList(),
@@ -75,15 +78,27 @@ class Orders with ChangeNotifier {
             id: orderId,
             amount: orderData['amount'],
             dateTime: DateTime.parse(orderData['dateTime']),
-            itemsInCart: (orderData['itemsInCart'] as List<dynamic>)
-                .map(
-                  (item) => ItemInCart(
-                    id: item['id'],
-                    quantity: item['quantity'],
-                    product: getProductFromId(item['product']),
-                  ),
-                )
-                .toList(),
+            itemsInCart: (orderData['itemsInCart'] as List<dynamic>).map(
+              (item) {
+                Product product;
+                try {
+                  product = getProductFromId(item['product']);
+                } catch (error) {
+                  product = Product(
+                    id: DateTime.now().toString(),
+                    title: item['title'],
+                    price: item['price'],
+                    description: '',
+                    imageUrl: '',
+                  );
+                }
+                return ItemInCart(
+                  id: item['id'],
+                  quantity: item['quantity'],
+                  product: product,
+                );
+              },
+            ).toList(),
           ),
         );
       },

@@ -114,6 +114,10 @@ class Products with ChangeNotifier {
   }
 
   Product findById(String id) {
-    return _items.firstWhere((prod) => prod.id == id);
+    try {
+      return _items.firstWhere((prod) => prod.id == id);
+    } catch (error) {
+      throw error;
+    }
   }
 }
