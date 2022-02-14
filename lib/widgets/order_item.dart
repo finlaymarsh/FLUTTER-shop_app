@@ -28,32 +28,40 @@ class _OrderItemState extends State<OrderItem> {
   Widget build(BuildContext context) {
     ItemInOrder item = Provider.of<ItemInOrder>(context);
     Orders orders = Provider.of<Orders>(context, listen: false);
-    return Card(
-      margin: EdgeInsets.all(10),
-      child: Column(
-        children: [
-          ListTile(
-            title: Text('£${widget.itemInOrder.amount.toStringAsFixed(2)}'),
-            subtitle: Text(
-              DateFormat('dd/MM/yyyy HH:mm')
-                  .format(widget.itemInOrder.dateTime),
+    return AnimatedContainer(
+      duration: Duration(milliseconds: 300),
+      height: item.expanded
+          ? widget.itemInOrder.numberOfProducts * 25 + 130.toDouble()
+          : 95,
+      child: Card(
+        margin: EdgeInsets.all(10),
+        child: Column(
+          children: [
+            ListTile(
+              title: Text('£${widget.itemInOrder.amount.toStringAsFixed(2)}'),
+              subtitle: Text(
+                DateFormat('dd/MM/yyyy HH:mm')
+                    .format(widget.itemInOrder.dateTime),
+              ),
+              trailing: IconButton(
+                icon:
+                    Icon(item.expanded ? Icons.expand_more : Icons.expand_less),
+                onPressed: () {
+                  if (item.expanded) {
+                    item.minimise_order();
+                  } else {
+                    orders.minimiseOrders();
+                    item.expand_order();
+                  }
+                },
+              ),
             ),
-            trailing: IconButton(
-              icon: Icon(item.expanded ? Icons.expand_more : Icons.expand_less),
-              onPressed: () {
-                if (item.expanded) {
-                  item.minimise_order();
-                } else {
-                  orders.minimiseOrders();
-                  item.expand_order();
-                }
-              },
-            ),
-          ),
-          if (item.expanded)
-            Container(
+            AnimatedContainer(
+              duration: Duration(milliseconds: 300),
               padding: EdgeInsets.symmetric(horizontal: 15, vertical: 4),
-              height: widget.itemInOrder.numberOfProducts * 20 + 30.toDouble(),
+              height: item.expanded
+                  ? widget.itemInOrder.numberOfProducts * 20 + 30.toDouble()
+                  : 0,
               child: ListView.builder(
                 itemBuilder: (_, index) => Container(
                   child: Container(
@@ -82,7 +90,8 @@ class _OrderItemState extends State<OrderItem> {
                 itemCount: widget.itemInOrder.numberOfProducts,
               ),
             )
-        ],
+          ],
+        ),
       ),
     );
   }

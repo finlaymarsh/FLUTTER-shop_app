@@ -35,9 +35,15 @@ class ProductItem extends StatelessWidget {
                   borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(15),
                       topRight: Radius.circular(15)),
-                  child: Image.network(
-                    product.imageUrl,
-                    fit: BoxFit.cover,
+                  child: Hero(
+                    tag: product.id,
+                    child: FadeInImage(
+                      placeholder: AssetImage('assets/images/tess.jpeg'),
+                      image: NetworkImage(
+                        product.imageUrl,
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
               ),
