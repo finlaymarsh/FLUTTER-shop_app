@@ -10,9 +10,16 @@ import '../providers/product.dart';
 
 class Orders with ChangeNotifier {
   static const baseUrl =
-      'https://shopping-cart-91ceb-default-rtdb.europe-west1.firebasedatabase.app/';
+      'https://shopping-cart-91ceb-default-rtdb.europe-west1.firebasedatabase.app';
   static const _pathToOrders = '/orders';
+  String trailingUrl;
+  final String authToken;
+  final String userId;
   List<ItemInOrder> _orders = [];
+
+  Orders(this.authToken, this.userId, this._orders) {
+    trailingUrl = ".json?auth=${authToken}";
+  }
 
   List<ItemInOrder> get orders {
     return [..._orders];
@@ -23,7 +30,7 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> addOrder(List<ItemInCart> cartProducts, double total) async {
-    final url = Uri.parse('${baseUrl}${_pathToOrders}.json');
+    final url = Uri.parse('${baseUrl}${_pathToOrders}/$userId${trailingUrl}');
     final timeStamp = DateTime.now();
     try {
       final response = await http.post(
@@ -64,7 +71,7 @@ class Orders with ChangeNotifier {
   }
 
   Future<void> fetchAndSetOrders(Function getProductFromId) async {
-    final url = Uri.parse('${baseUrl}${_pathToOrders}.json');
+    final url = Uri.parse('${baseUrl}${_pathToOrders}/$userId${trailingUrl}');
     final response = await http.get(url);
     final List<ItemInOrder> loadedOrders = [];
     final extractedData = json.decode(response.body) as Map<String, dynamic>;

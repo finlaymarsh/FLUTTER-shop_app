@@ -10,8 +10,15 @@ class Products with ChangeNotifier {
   static const baseUrl =
       'https://shopping-cart-91ceb-default-rtdb.europe-west1.firebasedatabase.app/';
   static const _pathToProducts = '/products';
+  String _trailingUrl;
 
-  List<Product> _items = [];
+  final String authToken;
+  final String userId;
+  List<Product> _items;
+
+  Products(this.authToken, this.userId, this._items) {
+    _trailingUrl = '.json?auth=${authToken}';
+  }
 
   List<Product> get items {
     return [..._items];
@@ -22,7 +29,7 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product product) async {
-    final url = Uri.parse('${baseUrl}${_pathToProducts}.json');
+    final url = Uri.parse('${baseUrl}${_pathToProducts}${_trailingUrl}');
     try {
       final response = await http.post(
         url,
@@ -32,7 +39,7 @@ class Products with ChangeNotifier {
             'description': product.description,
             'price': product.price,
             'imageUrl': product.imageUrl,
-            'isFavourite': product.isFavourite
+            'creatorId': userId,
           },
         ),
       );
@@ -42,7 +49,6 @@ class Products with ChangeNotifier {
         description: product.description,
         price: product.price,
         imageUrl: product.imageUrl,
-        isFavourite: product.isFavourite,
       );
       _items.add(newProduct);
       notifyListeners();
@@ -52,8 +58,13 @@ class Products with ChangeNotifier {
     }
   }
 
-  Future<void> fetchAndSetProducts() async {
-    final url = Uri.parse('${baseUrl}${_pathToProducts}.json');
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterString =
+        filterByUser == true ? '&orderBy="creatorId"&equalTo="$userId"' : '';
+    final url =
+        Uri.parse('${baseUrl}${_pathToProducts}${_trailingUrl}${filterString}');
+    final favouriteUrl = Uri.parse(
+        '${baseUrl}${Product.pathToFavourites}/${userId}$_trailingUrl');
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
@@ -61,6 +72,8 @@ class Products with ChangeNotifier {
       if (extractedData == null) {
         return;
       }
+      final favouriteResponse = await http.get(favouriteUrl);
+      final favouriteData = json.decode(favouriteResponse.body);
       extractedData.forEach((id, productData) {
         retrieved_items.add(
           Product(
@@ -69,7 +82,8 @@ class Products with ChangeNotifier {
             description: productData['description'],
             price: productData['price'],
             imageUrl: productData['imageUrl'],
-            isFavourite: productData['isFavourite'],
+            isFavourite:
+                favouriteData == null ? false : favouriteData[id] ?? false,
           ),
         );
       });
@@ -81,7 +95,8 @@ class Products with ChangeNotifier {
   }
 
   Future<void> updateProduct(Product product) async {
-    final url = Uri.parse('${baseUrl}${_pathToProducts}/${product.id}.json');
+    final url =
+        Uri.parse('${baseUrl}${_pathToProducts}/${product.id}${_trailingUrl}');
     await http.patch(
       url,
       body: json.encode(
@@ -99,7 +114,8 @@ class Products with ChangeNotifier {
   }
 
   void deleteProduct(Product product) async {
-    final url = Uri.parse('${baseUrl}${_pathToProducts}/${product.id}.json');
+    final url =
+        Uri.parse('${baseUrl}${_pathToProducts}/${product.id}${_trailingUrl}');
     final existingProductIndex =
         _items.indexWhere((prod) => prod.id == product.id);
     final existingProduct = _items[existingProductIndex];

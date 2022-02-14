@@ -6,7 +6,7 @@ import 'package:flutter/foundation.dart';
 class Product with ChangeNotifier {
   static const baseUrl =
       'https://shopping-cart-91ceb-default-rtdb.europe-west1.firebasedatabase.app/';
-  static const _pathToProducts = '/products';
+  static const pathToFavourites = '/user-favourites';
   final String id;
   final String title;
   final String description;
@@ -23,19 +23,16 @@ class Product with ChangeNotifier {
     this.isFavourite = false,
   });
 
-  void toggleFavouriteStatus() async {
+  void toggleFavouriteStatus(String token, String userId) async {
     final oldStatus = isFavourite;
     isFavourite = !isFavourite;
     notifyListeners();
-    final url = Uri.parse('${baseUrl}${_pathToProducts}/${id}.json');
+    final url = Uri.parse(
+        '${baseUrl}${pathToFavourites}/${userId}/${id}.json?auth=$token');
     try {
-      final response = await http.patch(
+      final response = await http.put(
         url,
-        body: json.encode(
-          {
-            'isFavourite': isFavourite,
-          },
-        ),
+        body: json.encode(isFavourite),
       );
       if (response.statusCode >= 400) {
         isFavourite = oldStatus;
